@@ -26,74 +26,43 @@ const App = () => {
      {headerName: "Date of Birth", field: 'dob'},
    ]
 
+   const searchDivStyle ={backgroundColor: '#dedede',padding: 10}
+   const searchStyle ={width: '100%', padding: '10px 20px',borderRadius: 20, outline: 0, border: '2px #68bf40 solid', fontSize: '100%'}
+
    const defaultColDef = {
-     sortable: true,
-     editable: true,
+    //  sortable: true,
+    //  editable: true,
      flex:1,
-     filter: true,
-     floatingFilter: true
+    //  filter: true,
+    //  floatingFilter: true
    }
 
    const onGridReady = (params) => {
      setGridApi(params.api);
      setGridColumnApi(params.columnApi);
-    // fetch('https://jsonplaceholder.typicode.com/comments')
-    //   .then(resp => resp.json())
-    //   .then(res => {
-    //     params.api.applyTransaction({add: res})
-    //     params.api.paginationGoToPage(10)
-    //   });
+
    }
 
-  //  const onPaginationChange =(pageSize) => {
-  //    gridApi.api.paginationSetPageSize(pageSize) 
-  //  }
-
-  //  const rowSelectionType = "multiple";
-
-  //  const onSelectionChanged = (event) => {
-  //    console.log(event.api.getSelectedRows());
-
-  //  const isRowSelectable = (node) => {
-  //    return node.data?(node.data.id%2===0 || node.data.email.includes('.org')):false;
-  //  }
-
-  const showColumn=()=>{
-    // for single column
-    // gridColumnApi.setColumnVisible('dob',hideColumn) 
-   
-   // for multiple columns
-    gridColumnApi.setColumnsVisible(['dob', 'email'],hideColumn)
-    setHideColumn(!hideColumn)
-   // to fit the size of column
-    gridApi.sizeColumnsToFit()
-  }
+   const onFilterTextChange = (e) => {
+    gridApi.setQuickFilter(e.target.value);
+   }
 
    return (
       <div>
-         {/* <select onChange={(e) =>onPaginationChange(e.target.value)}>
-           <option value='10' >10</option>
-           <option value='25'>25</option>
-           <option value='50'>50</option>
-           <option value='100'>100</option>
-         </select>   */}
-         <button onClick={showColumn}>Show DOB</button>
+        <div style={searchDivStyle}>
+          <input 
+            type="search" 
+            style={searchStyle} 
+            onChange={onFilterTextChange} 
+            placeholder="Search something..."
+          />
+        </div>
          <div className="ag-theme-alpine" style={{height: '500px'}}>
            <AgGridReact
             rowData={rowData}
             columnDefs={columnDefs}    
             defaultColDef={defaultColDef}
-            onGridReady={onGridReady}
-
-            // pagination={true}
-            // paginationPageSize={10}
-            
-            // rowSelection={rowSelectionType}
-            // onSelectionChanged={onSelectionChanged}
-            // rowMultiSelectWithClick={true}
-            // isRowSelectable={isRowSelectable}
-
-               >
+            onGridReady={onGridReady}>
                <AgGridColumn field="id"></AgGridColumn>
                <AgGridColumn field="name"></AgGridColumn>
                <AgGridColumn field="email"></AgGridColumn>
