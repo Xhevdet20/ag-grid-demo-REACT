@@ -1,76 +1,86 @@
-import React, {useState} from 'react';
-import {AgGridColumn, AgGridReact} from 'ag-grid-react';
-
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
+import React, { useState } from "react";
+import { AgGridColumn, AgGridReact } from "ag-grid-react";
+import "ag-grid-enterprise";
+import "ag-grid-community/dist/styles/ag-grid.css";
+import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 
 const App = () => {
+	const [gridApi, setGridApi] = useState(null);
 
-  const [gridApi, setGridApi]= useState(null);
-  const [gridColumnApi, setGridColumnApi] = useState(null);
-  const [hideColumn,setHideColumn]=useState(false)
-  const [rowData, setRowData]= useState([
-    {id: 1, name: 'Neeraj', email:'neraj@gmail.com', dob: '23/01/1996'},
-    {id: 2, name: 'Raj', email:'raj@gmail.com', dob: '08/08/1996'},
-    {id: 3, name: 'Negjmedin', email:'nexhi@gmail.com', dob: '09/09/1964'},
-    {id: 4, name: 'Shukri', email:'shuki@gmail.com', dob: '01/01/2020'},
-  ])
+	const columns = [
+		{ headerName: "Athlete", field: "athlete" },
+		{ headerName: "Age", field: "age" },
+		{ headerName: "Country", field: "country" },
+		{ headerName: "Year", field: "year" },
+		{ headerName: "Date", field: "date" },
+		{ headerName: "Sport", field: "sport" },
+		{ headerName: "Gold", field: "gold" },
+		{ headerName: "Silver", field: "silver" },
+		{ headerName: "Bronze", field: "bronze" },
+		{ headerName: "Total", field: "total" },
+	];
 
-  // select through checkbox and header selection for all items 
-  // {headerName: "Id", field: 'id', checkboxSelection : true, headerCheckboxSelection : true},
+	const defaultColDef = {
+		filter: true,
+		floatingFilter: true,
+		filter: "agTextColumnFilter",
+		sortable: true,
+	};
 
-   const columnDefs = [
-     {headerName: "Id", field: 'id',},
-     {headerName: "Name", field: 'name'},
-     {headerName: "Email", field: 'email'},
-     {headerName: "Date of Birth", field: 'dob'},
-   ]
+	const datasource = {
+		getRows(params) {
+			console.log(JSON.stringify(params.request, null, 1));
+			const { startRow, endRow, filterModel, sortModel } = params.request;
+			let url = "http://localhost:4000/olympic?";
+			// sorting
+			if (sortModel.length) {
+				const { colId, sort } = sortModel[0];
+				url += `_sort=${colId}&_order=${sort}&`;
+			}
 
-   const searchDivStyle ={backgroundColor: '#dedede',padding: 10}
-   const searchStyle ={width: '100%', padding: '10px 20px',borderRadius: 20, outline: 0, border: '2px #68bf40 solid', fontSize: '100%'}
+			// Filtering
+			const filterKeys = Object.keys(filterModel);
+			filterKeys.forEach((filter) => {
+				url += `${filter}=${filterModel[filter].filter}&`;
+			});
+			url += `_start=${startRow}&_end=${endRow}`;
+			// Pagination
+			fetch(url)
+				.then((httpResponse) => httpResponse.json())
+				.then((response) => {
+					params.successCallback(response, 499);
+				})
+				.catch((error) => {
+					console.error(error);
+					params.failCallback();
+				});
+		},
+	};
 
-   const defaultColDef = {
-    //  sortable: true,
-    //  editable: true,
-     flex:1,
-    //  filter: true,
-    //  floatingFilter: true
-   }
+	// register datasource with the grid
 
-   const onGridReady = (params) => {
-     setGridApi(params.api);
-     setGridColumnApi(params.columnApi);
+	const onGridReady = (params) => {
+		setGridApi(params.api);
 
-   }
+		params.api.setServerSideDatasource(datasource);
+	};
 
-   const onFilterTextChange = (e) => {
-    gridApi.setQuickFilter(e.target.value);
-   }
-
-   return (
-      <div>
-        <div style={searchDivStyle}>
-          <input 
-            type="search" 
-            style={searchStyle} 
-            onChange={onFilterTextChange} 
-            placeholder="Search something..."
-          />
-        </div>
-         <div className="ag-theme-alpine" style={{height: '500px'}}>
-           <AgGridReact
-            rowData={rowData}
-            columnDefs={columnDefs}    
-            defaultColDef={defaultColDef}
-            onGridReady={onGridReady}>
-               <AgGridColumn field="id"></AgGridColumn>
-               <AgGridColumn field="name"></AgGridColumn>
-               <AgGridColumn field="email"></AgGridColumn>
-               <AgGridColumn field="body"></AgGridColumn>
-           </AgGridReact>
-       </div>
-      </div>
-   );
+	return (
+		<div>
+			<div className="ag-theme-alpine" style={{ height: "500px" }}>
+				<AgGridReact
+					columnDefs={columns}
+					defaultColDef={defaultColDef}
+					rowModelType="serverSide"
+					onGridReady={onGridReady}
+					paginationPageSize={8}
+					domLayout="autoHeight"
+					serverSideStoreType="partial"
+					pagination={true}
+				></AgGridReact>
+			</div>
+		</div>
+	);
 };
 
 export default App;
